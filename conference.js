@@ -45,6 +45,7 @@ import {
     p2pStatusChanged,
     sendLocalParticipant
 } from './react/features/base/conference';
+import { getReplaceParticipant } from './react/features/base/config/functions';
 import {
     checkAndNotifyForNewDevice,
     getAvailableDevices,
@@ -304,10 +305,13 @@ class ConferenceConnector {
 
         // not enough rights to create conference
         case JitsiConferenceErrors.AUTHENTICATION_REQUIRED: {
+
+            const replaceParticipant = getReplaceParticipant(APP.store.getState());
+
             // Schedule reconnect to check if someone else created the room.
             this.reconnectTimeout = setTimeout(() => {
                 APP.store.dispatch(conferenceWillJoin(room));
-                room.join();
+                room.join(null, replaceParticipant);
             }, 5000);
 
             const { password }
@@ -393,8 +397,10 @@ class ConferenceConnector {
      *
      */
     connect() {
+        const replaceParticipant = getReplaceParticipant(APP.store.getState());
+
         // the local storage overrides here and in connection.js can be used by jibri
-        room.join(jitsiLocalStorage.getItem('xmpp_conference_password_override'));
+        room.join(jitsiLocalStorage.getItem('xmpp_conference_password_override'), replaceParticipant);
     }
 }
 
@@ -1861,7 +1867,6 @@ export default {
                     await this.useVideoStream(desktopVideoStream);
                 }
 
-
                 if (this._desktopAudioStream) {
                     // If there is a localAudio stream, mix in the desktop audio stream captured by the screen sharing
                     // api.
@@ -1972,7 +1977,12 @@ export default {
 
         room.on(
             JitsiConferenceEvents.CONFERENCE_UNIQUE_ID_SET,
-            (...args) => APP.store.dispatch(conferenceUniqueIdSet(room, ...args)));
+            (...args) => {
+                // Preserve the sessionId so that the value is accessible even after room
+                // is disconnected.
+                room.sessionId = room.getMeetingUniqueId();
+                APP.store.dispatch(conferenceUniqueIdSet(room, ...args));
+            });
 
         room.on(
             JitsiConferenceEvents.AUTH_STATUS_CHANGED,
@@ -2162,7 +2172,24 @@ export default {
             JitsiConferenceEvents.LOCK_STATE_CHANGED,
             (...args) => APP.store.dispatch(lockStateChanged(room, ...args)));
 
-        room.on(JitsiConferenceEvents.KICKED, participant => {
+        room.on(JitsiConferenceEvents.KICKED, (participant, reason, isReplaced) => {
+            if (isReplaced) {
+                // this event triggers when the local participant is kicked, `participant`
+                // is the kicker. In replace participant case, kicker is undefined,
+                // as the server initiated it. We mark in store the local participant
+                // as being replaced based on jwt.
+                const localParticipant = getLocalParticipant(APP.store.getState());
+
+                APP.store.dispatch(participantUpdated({
+                    conference: room,
+                    id: localParticipant.id,
+                    isReplaced
+                }));
+
+                // we send readyToClose when kicked participant is replace so that
+                // embedding app can choose to dispose the iframe API on the handler.
+                APP.API.notifyReadyToClose();
+            }
             APP.store.dispatch(kickedOut(room, participant));
         });
 
@@ -2435,8 +2462,8 @@ export default {
         });
 
         APP.UI.addListener(
-            UIEvents.TOGGLE_SCREENSHARING, audioOnly => {
-                this.toggleScreenSharing(undefined, { audioOnly });
+            UIEvents.TOGGLE_SCREENSHARING, ({ enabled, audioOnly }) => {
+                this.toggleScreenSharing(enabled, { audioOnly });
             }
         );
     },
@@ -2792,15 +2819,11 @@ export default {
             requestFeedbackPromise = Promise.resolve(true);
         }
 
-        let feedbackResult;
-
-        requestFeedbackPromise
-        .then(res => {
-            feedbackResult = res;
-
-            return this.leaveRoomAndDisconnect();
-        })
-        .then(() => {
+        Promise.all([
+            requestFeedbackPromise,
+            this.leaveRoomAndDisconnect()
+        ])
+        .then(values => {
             this._room = undefined;
             room = undefined;
 
@@ -2812,7 +2835,7 @@ export default {
             if (!interfaceConfig.SHOW_PROMOTIONAL_CLOSE_PAGE) {
                 APP.API.notifyReadyToClose();
             }
-            APP.store.dispatch(maybeRedirectToWelcomePage(feedbackResult));
+            APP.store.dispatch(maybeRedirectToWelcomePage(values[0]));
         });
     },
 

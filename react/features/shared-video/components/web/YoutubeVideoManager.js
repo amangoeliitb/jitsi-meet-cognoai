@@ -1,5 +1,4 @@
 /* eslint-disable no-invalid-this */
-import Logger from 'jitsi-meet-logger';
 import React from 'react';
 import YouTube from 'react-youtube';
 
@@ -10,8 +9,6 @@ import AbstractVideoManager, {
     _mapStateToProps,
     PLAYBACK_STATES
 } from './AbstractVideoManager';
-
-const logger = Logger.getLogger(__filename);
 
 /**
  * Manager of shared video.
@@ -152,11 +149,6 @@ class YoutubeVideoManager extends AbstractVideoManager<Props> {
             this.player.destroy();
             this.player = null;
         }
-
-        if (this.errorInPlayer) {
-            this.errorInPlayer.destroy();
-            this.errorInPlayer = null;
-        }
     }
 
     /**
@@ -195,20 +187,12 @@ class YoutubeVideoManager extends AbstractVideoManager<Props> {
         }
 
         this.play();
-    };
 
-    /**
-     * Fired when youtube player throws an error.
-     *
-     * @param {Object} event - Youtube player error event.
-     *
-     * @returns {void}
-     */
-    onPlayerError = event => {
-        logger.error('Error in the player:', event.data);
-
-        // store the error player, so we can remove it
-        this.errorInPlayer = event.target;
+        // sometimes youtube can get muted state from previous videos played in the browser
+        // and as we are disabling controls we want to unmute it
+        if (this.isMuted()) {
+            this.unMute();
+        }
     };
 
     getPlayerOptions = () => {
@@ -228,7 +212,7 @@ class YoutubeVideoManager extends AbstractVideoManager<Props> {
                     'rel': 0
                 }
             },
-            onError: this.onPlayerError,
+            onError: () => this.onError(),
             onReady: this.onPlayerReady,
             onStateChange: this.onPlayerStateChange,
             videoId

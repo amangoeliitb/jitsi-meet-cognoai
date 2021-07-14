@@ -64,7 +64,13 @@ function notify_whitelist_change(jid, moderators, room, mediaType)
         if moderators and occupant.role == 'moderator' then
             send_json_message(occupant.jid, moderators_body_json_str);
         elseif occupant.jid == jid then
-            send_json_message(occupant.jid, participant_body_json_str);
+            -- if the occupant is not moderator we send him that it is approved
+            -- if it is moderator we update him with the list, this is moderator joining or grant moderation was executed
+            if occupant.role == 'moderator' then
+                send_json_message(occupant.jid, moderators_body_json_str);
+            else
+                send_json_message(occupant.jid, participant_body_json_str);
+            end
         end
     end
 end
@@ -126,14 +132,15 @@ function on_message(event)
                     module:log('warn', 'Concurrent moderator enable/disable request or something is out of sync');
                     return true;
                 else
-                    room.av_moderation = {};
-                    room.av_moderation_actors = {};
-                    room.av_moderation[mediaType] = {};
+                    if not room.av_moderation then
+                        room.av_moderation = {};
+                        room.av_moderation_actors = {};
+                    end
                     room.av_moderation_actors[mediaType] = occupant.nick;
                 end
             else
                 enabled = false;
-                if not room.av_moderation or not room.av_moderation[mediaType] then
+                if not room.av_moderation then
                     module:log('warn', 'Concurrent moderator enable/disable request or something is out of sync');
                     return true;
                 else
@@ -141,10 +148,10 @@ function on_message(event)
                     room.av_moderation_actors[mediaType] = nil;
 
                     -- clears room.av_moderation if empty
-                    local is_empty = false;
+                    local is_empty = true;
                     for key,_ in pairs(room.av_moderation) do
                         if room.av_moderation[key] then
-                            is_empty = true;
+                            is_empty = false;
                         end
                     end
                     if is_empty then

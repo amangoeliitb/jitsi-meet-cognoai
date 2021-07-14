@@ -23,16 +23,29 @@ export function extractVpaasTenantFromPath(path: string) {
 }
 
 /**
+ * Returns the vpaas tenant.
+ *
+ * @param {Object} state - The global state.
+ * @returns {string}
+ */
+export function getVpaasTenant(state: Object) {
+    return extractVpaasTenantFromPath(state['features/base/connection'].locationURL.pathname);
+}
+
+/**
  * Returns true if the current meeting is a vpaas one.
  *
  * @param {Object} state - The state of the app.
+ * @param {boolean} requiredJwt - Whether jwt is required or not.
  * @returns {boolean}
  */
-export function isVpaasMeeting(state: Object) {
+export function isVpaasMeeting(state: Object, requiredJwt: boolean = true) {
     const { billingCounterUrl, iAmRecorder, iAmSipGateway } = state['features/base/config'];
     const { jwt } = state['features/base/jwt'];
 
-    const isAllowed = iAmRecorder || iAmSipGateway || Boolean(jwt);
+    const jwtBoolean = requiredJwt ? Boolean(jwt) : true;
+
+    const isAllowed = iAmRecorder || iAmSipGateway || jwtBoolean;
 
     return Boolean(
         billingCounterUrl

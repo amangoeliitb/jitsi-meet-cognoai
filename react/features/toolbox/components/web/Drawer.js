@@ -1,15 +1,9 @@
 // @flow
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import { Icon, IconArrowUpWide, IconArrowDownWide } from '../../../base/icons';
 
 type Props = {
-
-    /**
-     * Whether the drawer should have a button that expands its size or not.
-     */
-    canExpand: ?boolean,
 
     /**
      * The component(s) to be displayed within the drawer menu.
@@ -17,12 +11,12 @@ type Props = {
     children: React$Node,
 
     /**
-     Whether the drawer should be shown or not.
+     * Whether the drawer should be shown or not.
      */
     isOpen: boolean,
 
     /**
-     Function that hides the drawer.
+     * Function that hides the drawer.
      */
     onClose: Function
 };
@@ -33,56 +27,38 @@ type Props = {
  * @returns {ReactElement}
  */
 function Drawer({
-    canExpand,
     children,
     isOpen,
     onClose }: Props) {
-    const [ expanded, setExpanded ] = useState(false);
     const drawerRef: Object = useRef(null);
 
     /**
-     * Closes the drawer when clicking outside of it.
+     * Closes the drawer when clicking or touching outside of it.
      *
-     * @param {Event} event - Mouse down event object.
+     * @param {Event} event - Mouse down/start touch event object.
      * @returns {void}
      */
-    function handleOutsideClick(event: MouseEvent) {
+    function handleOutsideClickOrTouch(event: Event) {
         if (drawerRef.current && !drawerRef.current.contains(event.target)) {
             onClose();
         }
     }
 
     useEffect(() => {
-        window.addEventListener('mousedown', handleOutsideClick);
+        window.addEventListener('mousedown', handleOutsideClickOrTouch);
+        window.addEventListener('touchstart', handleOutsideClickOrTouch);
 
         return () => {
-            window.removeEventListener('mousedown', handleOutsideClick);
+            window.removeEventListener('mousedown', handleOutsideClickOrTouch);
+            window.removeEventListener('touchstart', handleOutsideClickOrTouch);
         };
     }, [ drawerRef ]);
-
-    /**
-     * Toggles the menu state between expanded/collapsed.
-     *
-     * @returns {void}
-     */
-    function toggleExpanded() {
-        setExpanded(!expanded);
-    }
 
     return (
         isOpen ? (
             <div
-                className = { `drawer-menu${expanded ? ' expanded' : ''}` }
+                className = 'drawer-menu'
                 ref = { drawerRef }>
-                {canExpand && (
-                    <div
-                        className = 'drawer-toggle'
-                        onClick = { toggleExpanded }>
-                        <Icon
-                            size = { 24 }
-                            src = { expanded ? IconArrowDownWide : IconArrowUpWide } />
-                    </div>
-                )}
                 {children}
             </div>
         ) : null
