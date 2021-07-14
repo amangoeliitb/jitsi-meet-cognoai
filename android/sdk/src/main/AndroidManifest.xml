@@ -32,7 +32,7 @@
         <activity
             android:name=".JitsiMeetActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
-            android:launchMode="singleTask"
+            android:launchMode="singleInstance"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:windowSoftInputMode="adjustResize"/>

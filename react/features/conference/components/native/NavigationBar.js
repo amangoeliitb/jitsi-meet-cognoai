@@ -94,7 +94,7 @@ function _mapStateToProps(state) {
     return {
         _conferenceTimerEnabled:
             getFeatureFlag(state, CONFERENCE_TIMER_ENABLED, true) && !hideConferenceTimer,
-        _meetingName: getConferenceName(state),
+        _meetingName: " ",
         _meetingNameEnabled:
             getFeatureFlag(state, MEETING_NAME_ENABLED, true) && !hideConferenceSubject,
         _visible: isToolboxVisible(state)

@@ -37,13 +37,16 @@ import java.util.Map;
 import static android.content.Context.ACTIVITY_SERVICE;
 
 @ReactModule(name = PictureInPictureModule.NAME)
-class PictureInPictureModule extends ReactContextBaseJavaModule {
+public class PictureInPictureModule extends ReactContextBaseJavaModule {
 
     public static final String NAME = "PictureInPicture";
     private static final String TAG = NAME;
 
     private static boolean isSupported;
     private boolean isDisabled;
+
+    public static Rational currentRatio;
+    public static boolean showWindow = false;
 
     public PictureInPictureModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -84,9 +87,9 @@ class PictureInPictureModule extends ReactContextBaseJavaModule {
      */
     @TargetApi(Build.VERSION_CODES.O)
     public void enterPictureInPicture() {
-        if (isDisabled) {
-            return;
-        }
+        // if (isDisabled) {
+        //     return;
+        // }
 
         if (!isSupported) {
             throw new IllegalStateException("Picture-in-Picture not supported");
@@ -98,20 +101,27 @@ class PictureInPictureModule extends ReactContextBaseJavaModule {
             throw new IllegalStateException("No current Activity!");
         }
 
-        JitsiMeetLogger.i(TAG + " Entering Picture-in-Picture");
+        try {
+            JitsiMeetLogger.i(TAG + " Going Back");
+            currentActivity.onBackPressed();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
 
-        PictureInPictureParams.Builder builder
-            = new PictureInPictureParams.Builder()
-                .setAspectRatio(new Rational(1, 1));
+        // JitsiMeetLogger.i(TAG + " Entering Picture-in-Picture");
+
+        // PictureInPictureParams.Builder builder
+        //     = new PictureInPictureParams.Builder()
+        //         .setAspectRatio(new Rational(1, 1));
 
         // https://developer.android.com/reference/android/app/Activity.html#enterPictureInPictureMode(android.app.PictureInPictureParams)
         //
         // The system may disallow entering picture-in-picture in various cases,
         // including when the activity is not visible, if the screen is locked
         // or if the user has an activity pinned.
-        if (!currentActivity.enterPictureInPictureMode(builder.build())) {
-            throw new RuntimeException("Failed to enter Picture-in-Picture");
-        }
+        // if (!currentActivity.enterPictureInPictureMode(builder.build())) {
+        //     throw new RuntimeException("Failed to enter Picture-in-Picture");
+        // }
     }
 
     /**

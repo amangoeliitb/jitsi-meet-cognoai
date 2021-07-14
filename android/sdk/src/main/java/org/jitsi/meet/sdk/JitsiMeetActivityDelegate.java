@@ -81,12 +81,12 @@ public class JitsiMeetActivityDelegate {
      * {@code super}'s implementation.
      */
     public static void onBackPressed() {
-        ReactInstanceManager reactInstanceManager
-            = ReactInstanceManagerHolder.getReactInstanceManager();
+        // ReactInstanceManager reactInstanceManager
+        //     = ReactInstanceManagerHolder.getReactInstanceManager();
 
-        if (reactInstanceManager != null) {
-            reactInstanceManager.onBackPressed();
-        }
+        // if (reactInstanceManager != null) {
+        //     reactInstanceManager.onBackPressed();
+        // }
     }
 
     /**

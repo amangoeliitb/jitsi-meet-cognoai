@@ -63,7 +63,7 @@ export default {
     pipButton: {
         iconStyle: {
             color: ColorPalette.white,
-            fontSize: 24
+            fontSize: 58
         },
         underlayColor: 'transparent'
     },
@@ -103,7 +103,8 @@ export default {
     roomName: {
         color: ColorPalette.white,
         fontSize: 14,
-        fontWeight: '400'
+        fontWeight: '400',
+        visibility: 'hidden'
     },
 
     roomNameView: {

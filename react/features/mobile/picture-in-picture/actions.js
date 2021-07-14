@@ -8,6 +8,11 @@ import { Platform } from '../../base/react';
 
 import { ENTER_PICTURE_IN_PICTURE } from './actionTypes';
 import logger from './logger';
+import BackButtonRegistry from '../back-button/BackButtonRegistry';
+
+// Binding function to the proper instance, so then the event emitter won't replace the
+// underlying instance.
+BackButtonRegistry.onHardwareBackPress = BackButtonRegistry.onHardwareBackPress.bind(BackButtonRegistry);
 
 /**
  * Enters (or rather initiates entering) picture-in-picture.
@@ -25,18 +30,19 @@ export function enterPictureInPicture() {
         // the button which is on the conference view, which means that it's
         // fine to enter PiP mode.
         if (getFeatureFlag(getState, PIP_ENABLED)) {
-            const { PictureInPicture } = NativeModules;
-            const p
-                = Platform.OS === 'android'
-                    ? PictureInPicture
-                        ? PictureInPicture.enterPictureInPicture()
-                        : Promise.reject(
-                            new Error('Picture-in-Picture not supported'))
-                    : Promise.resolve();
+            BackButtonRegistry.onHardwareBackPress;
+            // const { PictureInPicture } = NativeModules;
+            // const p
+            //     = Platform.OS === 'android'
+            //         ? PictureInPicture
+            //             ? PictureInPicture.enterPictureInPicture()
+            //             : Promise.reject(
+            //                 new Error('Picture-in-Picture not supported'))
+            //         : Promise.resolve();
 
-            p.then(
-                () => dispatch({ type: ENTER_PICTURE_IN_PICTURE }),
-                e => logger.warn(`Error entering PiP mode: ${e}`));
+            // p.then(
+            //     () => dispatch({ type: ENTER_PICTURE_IN_PICTURE }),
+            //     e => logger.warn(`Error entering PiP mode: ${e}`));
         }
     };
 }
