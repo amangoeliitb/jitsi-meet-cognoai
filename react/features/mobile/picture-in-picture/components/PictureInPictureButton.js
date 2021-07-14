@@ -4,7 +4,7 @@ import { NativeModules, Platform } from 'react-native';
 
 import { PIP_ENABLED, getFeatureFlag } from '../../../base/flags';
 import { translate } from '../../../base/i18n';
-import { IconMenuDown, IconArrowBackWithText } from '../../../base/icons';
+import { IconMenuDown, IconArrowBackWithText, IconArrowBack } from '../../../base/icons';
 import { connect } from '../../../base/redux';
 import { AbstractButton, type AbstractButtonProps } from '../../../base/toolbox/components';
 import { isLocalVideoTrackDesktop } from '../../../base/tracks/functions';
@@ -29,7 +29,7 @@ type Props = AbstractButtonProps & {
  */
 class PictureInPictureButton extends AbstractButton<Props, *> {
     accessibilityLabel = 'toolbar.accessibilityLabel.pip';
-    icon = IconArrowBackWithText;
+    icon = IconArrowBack;
     label = 'toolbar.pip';
 
     /**
@@ -39,8 +39,8 @@ class PictureInPictureButton extends AbstractButton<Props, *> {
      * @returns {void}
      */
     _handleClick() {
-        BackButtonRegistry.onHardwareBackPress;
-        // this.props.dispatch(enterPictureInPicture());
+        // BackButtonRegistry.onHardwareBackPress;
+        this.props.dispatch(enterPictureInPicture());
     }
 
     /**
